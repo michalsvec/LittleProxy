@@ -288,21 +288,9 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
 
         boolean newConnectionRequired = false;
         if (ProxyUtils.isCONNECT(httpRequest)) {
-            // Connect request on a previously used connection may break the connection later
-            // when another HTTP server (which had connected before on this connection before it was upgraded to HTTPS) disconnects.
-            // That may cause disconnection of client2proxy in serverDisconnected()
-            if(isConnectionUsed()) {
-                LOG.error(
-                        "Dropping request to {} as it's a CONNECT request on a previously used connection.",
-                        serverHostAndPort
-                );
-                writeBadGateway(httpRequest);
-                return DISCONNECT_REQUESTED;
-            }
-
-            LOG.debug("Not reusing existing ProxyToServerConnection because request is a CONNECT for: {}",
-                    serverHostAndPort
-            );
+            LOG.debug(
+                    "Not reusing existing ProxyToServerConnection because request is a CONNECT for: {}",
+                    serverHostAndPort);
             newConnectionRequired = true;
         } else if (currentServerConnection == null) {
             LOG.debug("Didn't find existing ProxyToServerConnection for: {}",
@@ -373,11 +361,6 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
         } else {
             return AWAITING_INITIAL;
         }
-    }
-
-    private boolean isConnectionUsed()
-    {
-        return currentServerConnection != null || !serverConnectionsByHostAndPort.isEmpty();
     }
 
     /**
